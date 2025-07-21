@@ -1,0 +1,76 @@
+# English Technical Terms Whitelist
+# Add one keyword per line. Lines starting with # are comments.
+# AI and Machine Learning
+AI
+ML
+GPU
+CPU
+API
+SQL
+HTTP
+JSON
+XML
+HTML
+CSS
+JS
+CNN
+RNN
+LSTM
+GAN
+SVM
+KNN
+PCA
+NLP
+NLU
+OCR
+ASR
+TTS
+
+# Programming Languages and Frameworks
+Python
+Java
+C++
+JavaScript
+TypeScript
+React
+Vue
+Angular
+Django
+Flask
+Spring
+Node.js
+Express
+Ruby
+Rails
+PHP
+Laravel
+Go
+Rust
+Kotlin
+Swift
+
+# Cloud and Enterprise
+AWS
+GCP
+Azure
+IBM
+SAP
+CRM
+ERP
+SaaS
+PaaS
+IaaS
+Docker
+Kubernetes
+Jenkins
+Git
+GitHub
+GitLab
+
+# Mathematical Constants and Concepts
+Pi
+E
+φ
+Phi
+NP
+P

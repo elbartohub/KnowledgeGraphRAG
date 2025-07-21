@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Graph RAG - Document Q&A</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #ffffff;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container {
+            max-width: 1200px;
+        }
+        
+        .card {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 15px;
+            border: none;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        .card-header {
+            background: #6366f1;
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-primary {
+            background: #6366f1;
+            border: none;
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
+            background: #5855f7;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            border: none;
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            border: none;
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.6);
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            border: none;
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6);
+        }
+        
+        .btn-sm {
+            padding: 0.4rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+        }
+        
+        .answer-section {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+            border-left: 5px solid #6366f1;
+        }
+        
+        .source-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #10b981;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .loading {
+            display: none;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner-border {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8fafc;
+        }
+        
+        .upload-area:hover {
+            border-color: #6366f1;
+            background: #ede9fe;
+        }
+        
+        .upload-area.dragover {
+            border-color: #6366f1;
+            background: #ede9fe;
+            transform: scale(1.02);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: #6366f1;
+            margin-bottom: 1rem;
+        }
+        
+        .document-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .document-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .document-item:hover {
+            border-color: #6366f1;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.1);
+        }
+        
+        .document-info {
+            flex-grow: 1;
+        }
+        
+        .document-actions {
+            margin-left: 1rem;
+        }
+        
+        .stats {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* Graph visualization styles */
+        .graph-tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .legend {
+            background: rgba(255,255,255,0.9);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        #graphVisualization {
+            cursor: grab;
+        }
+        
+        #graphVisualization:active {
+            cursor: grabbing;
+        }
+        
+        /* Zoom control styles */
+        .btn-info {
+            background: #06b6d4;
+            border: none;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+        }
+        
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.6);
+            background: #0891b2;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            border: none;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.6);
+            background: #4b5563;
+        }
+        
+        /* Accordion styles for Answer/Sources */
+        .accordion-item {
+            border: none;
+            border-radius: 15px !important;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .accordion-button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 15px !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+        
+        .accordion-button:not(.collapsed) {
+            background: #4f46e5;
+            color: white;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+        
+        .accordion-button:focus {
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.5);
+        }
+        
+        .accordion-button::after {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+        }
+        
+        .accordion-body {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0 0 15px 15px;
+            padding: 1.5rem;
+        }
+        
+        .accordion-collapse {
+            border-radius: 0 0 15px 15px;
+        }
+    </style>
+</head>
+<body>
+    <style>
+        .main-section-width {
+            width: 100%;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .container.py-5 {
+            width: 100%;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+        @media (max-width: 991px) {
+            .main-section-width, .container.py-5 {
+                max-width: 100%;
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+        }
+    </style>
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center mb-5">
+                    <h1 class="display-4 text-dark mb-3">
+                        <i class="fas fa-brain me-3" style="color: #6366f1;"></i>Knowledge Graph RAG
+                    </h1>
+                    <p class="lead text-muted">Intelligent Document Question & Answer System</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="row mb-4">
+                    <div class="col-12">
+                        {% for message in messages %}
+                            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>{{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <!-- Upload Section -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-upload me-2"></i>Upload Documents
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+                            <div class="upload-area" id="uploadArea">
+                                <i class="fas fa-cloud-upload-alt feature-icon"></i>
+                                <h5>Drag & Drop Files Here</h5>
+                                <p class="text-muted mb-3">or click to browse</p>
+                                <input type="file" name="file" id="fileInput" class="form-control" accept=".pdf,.docx,.txt" style="display: none;" required>
+                                <small class="text-muted">
+                                    <i class="fas fa-file-pdf text-danger me-1"></i>PDF
+                                    <i class="fas fa-file-word text-primary mx-2"></i>DOCX
+                                    <i class="fas fa-file-alt text-secondary mx-1"></i>TXT
+                                </small>
+                            </div>
+                            <style>
+                                .uniform-width-btn {
+                                    width: 140px;
+                                    min-width: 140px;
+                                    flex-basis: 0;
+                                    flex-grow: 1;
+                                }
+                            </style>
+                            <div class="mt-3 d-flex gap-2">
+                                <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm" style="flex-basis: 0; flex-grow: 1; min-width: 0;">
+                                    <button type="submit" class="btn btn-primary uniform-width-btn">
+                                        <i class="fas fa-upload me-2"></i>Upload
+                                    </button>
+                                </form>
+                                <form action="/clear" method="post" onsubmit="return confirm('Are you sure you want to clear all documents?')" style="flex-basis: 0; flex-grow: 1; min-width: 0;">
+                                        <button type="submit" class="btn btn-danger uniform-width-btn">
+                                            <span style="white-space: nowrap;"><i class="fas fa-trash me-2"></i>Clear All</span>
+                                        </button>
+                                </form>
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Management Section -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>Document Library
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-center mb-2">
+                            <button class="btn btn-success btn-sm" onclick="refreshDocumentList()">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </div>
+                        <div class="document-list" id="documentList">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-folder-open fa-3x mb-3"></i>
+                                <p>No documents uploaded yet</p>
+                                <small>Upload documents to see them here</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Query Section -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-question-circle me-2"></i>Ask Questions
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="queryForm">
+                            <div class="mb-3">
+                                <label for="query" class="form-label">Your Question:</label>
+                                <textarea class="form-control" id="query" name="query" rows="4" 
+                                         placeholder="Ask a question about your uploaded documents..." required></textarea>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary" id="queryBtn">
+                                    <i class="fas fa-search me-2"></i>Ask Question
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="loading text-center mt-3" id="loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Thinking...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Answer Section -->
+        <div class="row justify-content-center" id="answerSection" style="display: block; margin-top: 10px; margin-bottom: 10px;">
+            <div class="main-section-width">
+                <div class="card" style="margin-bottom: 0; min-height: 280px;">
+                    <div class="card-header" style="padding: 0.5rem 1rem; min-height: 36px;">
+                        <i class="fas fa-lightbulb me-2"></i><span>Answer</span>
+                    </div>
+                    <div class="card-body" style="padding: 0.5rem 1rem; min-height: 220px;">
+                        <div class="answer-section" style="margin: 0; padding: 0;">
+                            <textarea id="answerContent" style="width: 100%; height: 200px; resize: vertical; font-size: 1rem; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb;" placeholder="Answer will appear here..." readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ...existing code... -->
+        <!-- Sources Section (moved to true bottom) -->
+    </div> <!-- End container -->
+    <!-- ...existing code... -->
+        <!-- GraphRAG Visualization Section -->
+        <div class="row mt-4" id="graphSection">
+            <div class="main-section-width">
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-header" style="padding-top: 10px; padding-bottom: 10px; min-height: 40px;">
+                        <h3 class="card-title mb-0" style="font-size: 1.5rem; margin-bottom: 0;">
+                            <i class="fas fa-project-diagram me-2"></i>Knowledge Graph
+                        </h3>
+                        <div class="float-end" style="margin-top: 0;">
+                            <select class="form-select form-select-sm me-2" id="documentFilter" style="width: auto; display: inline-block;" onchange="filterGraphByDocument()">
+                                <option value="">All Documents</option>
+                            </select>
+                            <button class="btn btn-info btn-sm me-1" onclick="zoomIn()" title="Zoom In">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                            <button class="btn btn-info btn-sm me-1" onclick="zoomOut()" title="Zoom Out">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <button class="btn btn-secondary btn-sm me-2" onclick="resetZoom()" title="Reset Zoom">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                            </button>
+                            <button class="btn btn-success btn-sm me-2" onclick="toggleGraphView()">
+                                <i class="fas fa-eye me-1"></i><span id="graphToggleText">Hide Graph</span>
+                            </button>
+                            <button class="btn btn-warning btn-sm" onclick="refreshGraph()">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body" id="graphContainer" style="height: 500px;">
+                        <div id="graphVisualization" style="width: 100%; height: 100%; border: 1px solid #e5e7eb; border-radius: 10px;">
+                            <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                                <div class="text-center">
+                                    <i class="fas fa-project-diagram fa-3x mb-3"></i>
+                                    <p>Upload documents to see knowledge graph</p>
+                                    <small>Graph will show entities and relationships between documents</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small>
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span id="graphStats">Knowledge graph shows entities and relationships extracted from your documents</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Sources Section (moved below Knowledge Graph) -->
+    <div class="row justify-content-center" id="sourcesSection" style="margin-top: 10px; margin-bottom: 10px;">
+        <div class="main-section-width">
+            <div class="card" style="margin-bottom: 0; min-height: 280px;">
+                <div class="card-header" style="padding: 0.5rem 1rem; min-height: 36px;">
+                    <i class="fas fa-book me-2"></i><span>Sources</span>
+                </div>
+                <div class="card-body" style="min-height: 220px;">
+                    <div id="sourcesContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Features Section -->
+        <div class="row mt-5">
+            <div class="main-section-width">
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-body">
+                        <h4 class="text-center mb-4">Features</h4>
+                        <div class="row text-center">
+                            <div class="col-md-3 mb-3">
+                                <i class="fas fa-file-upload feature-icon"></i>
+                                <h6>Multi-Format Support</h6>
+                                <small class="text-muted">PDF, DOCX, TXT files</small>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <i class="fas fa-brain feature-icon"></i>
+                                <h6>AI-Powered</h6>
+                                <small class="text-muted">Google Gemini integration</small>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <i class="fas fa-search feature-icon"></i>
+                                <h6>Smart Search</h6>
+                                <small class="text-muted">Vector-based retrieval</small>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <i class="fas fa-bolt feature-icon"></i>
+                                <h6>Fast & Accurate</h6>
+                                <small class="text-muted">Quick responses</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyword Management Section -->
+        <div class="row mt-4">
+            <div class="main-section-width">
+                <div class="card" style="margin-bottom: 0;">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-tags me-2"></i>Keyword Management
+                        </h3>
+                        <div class="btn-group float-end" role="group">
+                            <button class="btn btn-primary btn-sm" onclick="reloadKeywords()">
+                                <i class="fas fa-sync-alt me-1"></i>Reload Keywords
+                            </button>
+                            <button class="btn btn-info btn-sm" onclick="showKeywordStats()">
+                                <i class="fas fa-chart-bar me-1"></i>Statistics
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-check-circle text-success me-2"></i>Whitelist Keywords</h6>
+                                <div class="keyword-stats" id="whitelistStats">
+                                    <div class="text-muted">Click "Statistics" to view keyword information</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-ban text-danger me-2"></i>Blacklist Keywords</h6>
+                                <div class="keyword-stats" id="blacklistStats">
+                                    <div class="text-muted">Click "Statistics" to view keyword information</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h6><i class="fas fa-info-circle me-2"></i>Keyword Files</h6>
+                            <p class="text-muted small mb-2">
+                                Keywords are loaded from text files in the <code>keyword_elements/</code> directory. 
+                                You can edit these files and reload to update the entity extraction.
+                            </p>
+                            <div id="keywordFilesInfo" class="text-muted">
+                                <small>Loading keyword file information...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Add D3.js for graph visualization -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // File upload drag and drop functionality
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadForm = document.getElementById('uploadForm');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                uploadForm.submit();
+            }
+        });
+
+        // Handle form submission to refresh document list
+        uploadForm.addEventListener('submit', (e) => {
+            // Let the form submit normally, then refresh document list after page reload
+            setTimeout(() => {
+                refreshDocumentList();
+            }, 1000);
+        });
+
+        // Query form submission
+        document.getElementById('queryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitQuery();
+        });
+
+        // Keyboard event for textarea: Enter submits, Ctrl+Enter inserts newline
+        const queryTextarea = document.getElementById('query');
+        queryTextarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (e.ctrlKey || e.metaKey) {
+                    // Insert newline at cursor position
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    this.value = this.value.substring(0, start) + "\n" + this.value.substring(end);
+                    this.selectionStart = this.selectionEnd = start + 1;
+                    e.preventDefault();
+                } else {
+                    // Submit form
+                    e.preventDefault();
+                    submitQuery();
+                }
+            }
+        });
+
+        async function submitQuery() {
+            const query = document.getElementById('query').value.trim();
+            if (!query) return;
+
+            // Show loading
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('queryBtn').disabled = true;
+            document.getElementById('answerSection').style.display = 'none';
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Display answer
+                    const answerContent = document.getElementById('answerContent');
+                    if (answerContent.tagName === 'TEXTAREA') {
+                        answerContent.value = data.answer;
+                    } else {
+                        answerContent.innerHTML = `<p class="mb-0">${data.answer.replace(/\n/g, '<br>')}</p>`;
+                    }
+
+                    // Display sources
+                    const sourcesHtml = data.sources.map((source, index) => `
+                        <div class="source-item">
+                            <h6><i class="fas fa-file me-2"></i>${source.filename}</h6>
+                            <p class="mb-0 text-muted">${source.content}</p>
+                        </div>
+                    `).join('');
+                    document.getElementById('sourcesContent').innerHTML = sourcesHtml;
+                    document.getElementById('answerSection').style.display = 'block';
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                // Hide loading
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('queryBtn').disabled = false;
+            }
+        }
+
+        // File input change handler
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const fileName = e.target.files[0].name;
+                uploadArea.innerHTML = `
+                    <i class="fas fa-file-check feature-icon text-success"></i>
+                    <h5>File Selected</h5>
+                    <p class="text-muted mb-3">${fileName}</p>
+                    <small class="text-muted">Click upload to process</small>
+                `;
+            }
+        });
+
+        // Document management functions
+        async function refreshDocumentList() {
+            try {
+                const response = await fetch('/documents');
+                const data = await response.json();
+                
+                const documentList = document.getElementById('documentList');
+                
+                if (data.documents && data.documents.length > 0) {
+                    const documentsHtml = data.documents.map(doc => `
+                        <div class="document-item">
+                            <div class="document-info">
+                                <h6 class="mb-1">
+                                    <i class="fas fa-file-${getFileIcon(doc.filename)} me-2"></i>
+                                    ${doc.filename}
+                                </h6>
+                                <small class="text-muted">
+                                    ${doc.chunks || 0} chunks • Uploaded: ${new Date(doc.created_at || Date.now()).toLocaleDateString()}
+                                </small>
+                            </div>
+                            <div class="document-actions">
+                                <button class="btn btn-warning btn-sm me-1" onclick="viewDocument('${doc.id}', '${doc.filename}')" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteDocument('${doc.id}', '${doc.filename}')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    documentList.innerHTML = `
+                        <div class="mb-3">
+                            <small class="text-muted">${data.documents.length} document(s) in library</small>
+                        </div>
+                        ${documentsHtml}
+                    `;
+                } else {
+                    documentList.innerHTML = `
+                        <div class="text-center text-muted">
+                            <i class="fas fa-folder-open fa-3x mb-3"></i>
+                            <p>No documents uploaded yet</p>
+                            <small>Upload documents to see them here</small>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error fetching documents:', error);
+                document.getElementById('documentList').innerHTML = `
+                    <div class="text-center text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p>Error loading documents</p>
+                    </div>
+                `;
+            }
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.toLowerCase().split('.').pop();
+            switch(ext) {
+                case 'pdf': return 'pdf text-danger';
+                case 'docx': 
+                case 'doc': return 'word text-primary';
+                case 'txt': return 'text text-secondary';
+                default: return 'file text-muted';
+            }
+        }
+
+        async function deleteDocument(docId, filename) {
+            if (!confirm(`Are you sure you want to delete "${filename}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/documents/${docId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert(`Document "${filename}" deleted successfully`);
+                    refreshDocumentList();
+                } else {
+                    const error = await response.json();
+                    alert(`Error deleting document: ${error.error}`);
+                }
+            } catch (error) {
+                alert(`Error deleting document: ${error.message}`);
+            }
+        }
+
+        async function viewDocument(docId, filename) {
+            try {
+                const response = await fetch(`/documents/${docId}/preview`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Create modal to show document preview
+                    const modal = document.createElement('div');
+                    modal.className = 'modal fade show';
+                    modal.style.display = 'block';
+                    modal.innerHTML = `
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-file-${getFileIcon(filename)} me-2"></i>
+                                        ${filename}
+                                    </h5>
+                                    <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Total Chunks:</strong> ${data.chunks.length}</p>
+                                    <hr>
+                                    <div style="max-height: 400px; overflow-y: auto;">
+                                        ${data.chunks.map((chunk, i) => `
+                                            <div class="mb-3 p-3 border rounded">
+                                                <h6>Chunk ${i + 1}</h6>
+                                                <p class="mb-0">${chunk.substring(0, 300)}${chunk.length > 300 ? '...' : ''}</p>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                } else {
+                    alert('Error loading document preview');
+                }
+            } catch (error) {
+                alert(`Error viewing document: ${error.message}`);
+            }
+        }
+
+        // GraphRAG visualization functions
+        function toggleGraphView() {
+            const graphContainer = document.getElementById('graphContainer');
+            const graphToggleText = document.getElementById('graphToggleText');
+            
+            if (graphContainer.style.display === 'none' || graphContainer.style.display === '') {
+                graphContainer.style.display = 'block';
+                graphToggleText.innerText = 'Hide Graph';
+            } else {
+                graphContainer.style.display = 'none';
+                graphToggleText.innerText = 'Show Graph';
+            }
+        }
+
+        async function refreshGraph() {
+            // Placeholder for graph refresh logic
+            alert('Graph refresh functionality is not implemented yet.');
+        }
+
+        // Load documents when page loads
+        window.addEventListener('load', refreshDocumentList);
+
+        // GraphRAG Visualization Functions
+        let graphVisible = true;
+        let graphData = null;
+        let currentZoom = 1;
+        let svgElement = null;
+        let zoomBehavior = null;
+        let currentDocumentFilter = "";
+        let filteredGraphData = null;
+
+        function toggleGraphView() {
+            const graphContainer = document.getElementById('graphContainer');
+            const toggleText = document.getElementById('graphToggleText');
+            
+            if (graphVisible) {
+                graphContainer.style.display = 'none';
+                toggleText.textContent = 'Show Graph';
+                graphVisible = false;
+            } else {
+                graphContainer.style.display = 'block';
+                toggleText.textContent = 'Hide Graph';
+                graphVisible = true;
+                if (!graphData) {
+                    loadGraphData();
+                }
+            }
+        }
+
+        function populateDocumentFilter() {
+            const filterSelect = document.getElementById('documentFilter');
+            
+            // Clear existing options except "All Documents"
+            filterSelect.innerHTML = '<option value="">All Documents</option>';
+            
+            if (graphData && graphData.nodes) {
+                const documents = graphData.nodes.filter(node => node.type === 'document');
+                documents.forEach(doc => {
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = doc.name;
+                    filterSelect.appendChild(option);
+                });
+            }
+        }
+
+        function filterGraphByDocument() {
+            const filterSelect = document.getElementById('documentFilter');
+            currentDocumentFilter = filterSelect.value;
+            
+            if (!graphData) {
+                return;
+            }
+            
+            if (currentDocumentFilter === "") {
+                // Show all documents
+                filteredGraphData = graphData;
+            } else {
+                // Filter to show only selected document and its connected entities
+                const selectedDocNode = graphData.nodes.find(node => node.id === currentDocumentFilter);
+                if (!selectedDocNode) return;
+                
+                // Find all entities connected to this document
+                const connectedEntityIds = new Set();
+                graphData.links.forEach(link => {
+                    // Handle both string IDs and object references
+                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                    
+                    if (sourceId === currentDocumentFilter || targetId === currentDocumentFilter) {
+                        connectedEntityIds.add(sourceId === currentDocumentFilter ? targetId : sourceId);
+                    }
+                });
+                
+                // Create filtered data
+                const filteredNodes = [selectedDocNode];
+                graphData.nodes.forEach(node => {
+                    if (node.type === 'entity' && connectedEntityIds.has(node.id)) {
+                        filteredNodes.push(node);
+                    }
+                });
+                
+                const filteredLinks = graphData.links.filter(link => {
+                    // Handle both string IDs and object references
+                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                    
+                    return (sourceId === currentDocumentFilter || targetId === currentDocumentFilter) ||
+                           (connectedEntityIds.has(sourceId) && connectedEntityIds.has(targetId));
+                });
+                
+                filteredGraphData = {
+                    nodes: filteredNodes,
+                    links: filteredLinks,
+                    stats: {
+                        total_documents: 1,
+                        total_entities: filteredNodes.filter(n => n.type === 'entity').length,
+                        total_relationships: filteredLinks.length
+                    }
+                };
+            }
+            
+            renderGraph(filteredGraphData);
+            updateGraphStats(filteredGraphData.stats);
+        }
+
+        function zoomIn() {
+            if (zoomBehavior && svgElement) {
+                currentZoom = Math.min(currentZoom * 1.5, 5); // Max zoom 5x
+                svgElement.transition().duration(300).call(
+                    zoomBehavior.transform,
+                    d3.zoomIdentity.scale(currentZoom)
+                );
+            }
+        }
+
+        function zoomOut() {
+            if (zoomBehavior && svgElement) {
+                currentZoom = Math.max(currentZoom / 1.5, 0.1); // Min zoom 0.1x
+                svgElement.transition().duration(300).call(
+                    zoomBehavior.transform,
+                    d3.zoomIdentity.scale(currentZoom)
+                );
+            }
+        }
+
+        function resetZoom() {
+            if (zoomBehavior && svgElement) {
+                currentZoom = 1;
+                const container = document.getElementById('graphVisualization');
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                
+                svgElement.transition().duration(500).call(
+                    zoomBehavior.transform,
+                    d3.zoomIdentity.translate(width / 2, height / 2).scale(1).translate(-width / 2, -height / 2)
+                );
+            }
+        }
+
+        async function loadGraphData() {
+            try {
+                showGraphLoading();
+                const response = await fetch('/graph-data');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                graphData = await response.json();
+                
+                if (graphData.error) {
+                    throw new Error(graphData.error);
+                }
+                
+                if (graphData.nodes && graphData.nodes.length > 0) {
+                    filteredGraphData = graphData; // Initialize filtered data
+                    populateDocumentFilter(); // Populate the document filter dropdown
+                    renderGraph(filteredGraphData);
+                    updateGraphStats(filteredGraphData.stats);
+                } else {
+                    showEmptyGraphMessage();
+                    updateGraphStats(null);
+                }
+            } catch (error) {
+                console.error('Error loading graph data:', error);
+                showGraphError(error.message);
+                updateGraphStats(null);
+            }
+        }
+
+        function showGraphLoading() {
+            document.getElementById('graphVisualization').innerHTML = `
+                <div class="d-flex align-items-center justify-content-center h-100">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted">Building knowledge graph...</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateGraphStats(stats) {
+            const statsElement = document.getElementById('graphStats');
+            if (stats) {
+                statsElement.innerHTML = `
+                    <i class="fas fa-chart-bar me-1"></i>
+                    ${stats.total_documents} documents • 
+                    ${stats.total_entities} entities • 
+                    ${stats.total_relationships} relationships
+                `;
+            } else {
+                statsElement.innerHTML = `
+                    <i class="fas fa-info-circle me-1"></i>
+                    Knowledge graph shows entities and relationships extracted from your documents
+                `;
+            }
+        }
+
+        function renderGraph(data) {
+            const container = document.getElementById('graphVisualization');
+            container.innerHTML = ''; // Clear existing content
+            
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            // Create SVG with zoom behavior
+            const svg = d3.select('#graphVisualization')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            svgElement = svg; // Store reference for zoom controls
+            
+            // Create zoom behavior
+            zoomBehavior = d3.zoom()
+                .scaleExtent([0.1, 5])
+                .on('zoom', function(event) {
+                    currentZoom = event.transform.k;
+                    g.attr('transform', event.transform);
+                });
+            
+            svg.call(zoomBehavior);
+            
+            // Create container group for all graph elements
+            const g = svg.append('g');
+            
+            // Create force simulation
+            const simulation = d3.forceSimulation(data.nodes)
+                .force('link', d3.forceLink(data.links).id(d => d.id).distance(100))
+                .force('charge', d3.forceManyBody().strength(-300))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('collision', d3.forceCollide().radius(d => d.size + 5));
+            
+            // Add links
+            const link = g.append('g')
+                .selectAll('line')
+                .data(data.links)
+                .enter().append('line')
+                .attr('stroke', d => d.type === 'contains' ? '#10b981' : '#6366f1')
+                .attr('stroke-opacity', 0.6)
+                .attr('stroke-width', d => Math.max(0.5, d.weight * 1)); // Changed from d.weight * 1.5 to d.weight * 1
+            
+            // Add nodes
+            const node = g.append('g')
+                .selectAll('circle')
+                .data(data.nodes)
+                .enter().append('circle')
+                .attr('r', d => d.type === 'document' ? 12 : 8)
+                .attr('fill', d => d.color)
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2)
+                .call(d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended))
+                .on('mouseover', function(event, d) {
+                    // Highlight connected nodes and edges
+                    const connectedNodes = new Set();
+                    data.links.forEach(link => {
+                        if (link.source.id === d.id) connectedNodes.add(link.target.id);
+                        if (link.target.id === d.id) connectedNodes.add(link.source.id);
+                    });
+                    node.style('opacity', n => n.id === d.id || connectedNodes.has(n.id) ? 1 : 0.3);
+                    link.style('opacity', l => l.source.id === d.id || l.target.id === d.id ? 1 : 0.1);
+                    // Show tooltip
+                    const tooltip = d3.select('body').append('div')
+                        .attr('class', 'graph-tooltip')
+                        .style('position', 'absolute')
+                        .style('background', 'rgba(0,0,0,0.8)')
+                        .style('color', 'white')
+                        .style('padding', '8px')
+                        .style('border-radius', '4px')
+                        .style('font-size', '12px')
+                        .style('pointer-events', 'none')
+                        .style('z-index', 1000);
+                    let freqHtml = '';
+                    if (d.type === 'entity' && typeof d.frequency === 'number') {
+                        freqHtml = `<br>Appearances: <strong>${d.frequency}</strong>`;
+                    }
+                    tooltip.html(`
+                        <strong>${d.name}</strong><br>
+                        Type: ${d.type}<br>
+                        ${d.label ? `Label: ${d.label}<br>` : ''}
+                        Connections: ${d.connections}
+                        ${freqHtml}
+                    `)
+                    .style('left', (event.pageX + 10) + 'px')
+                    .style('top', (event.pageY - 10) + 'px');
+                })
+                .on('mouseout', function() {
+                    node.style('opacity', 1);
+                    link.style('opacity', 1);
+                    d3.selectAll('.graph-tooltip').remove();
+                })
+                .on('click', function(event, d) {
+                    if (d.type === 'document') {
+                        // Select this document in the filter
+                        document.getElementById('documentFilter').value = d.id;
+                        filterGraphByDocument();
+                    }
+                });
+            
+            // Add labels
+            const label = g.append('g')
+                .selectAll('text')
+                .data(data.nodes)
+                .enter().append('text')
+                .text(d => d.name.length > 15 ? d.name.substring(0, 15) + '...' : d.name)
+                .attr('font-size', '11px')
+                .attr('fill', '#374151')
+                .attr('text-anchor', 'middle')
+                .attr('dy', d => d.type === 'document' ? 18 : 15)
+                .style('pointer-events', 'none')
+                .style('user-select', 'none');
+            
+            // Update positions on simulation tick
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+                
+                node
+                    .attr('cx', d => d.x)
+                    .attr('cy', d => d.y);
+                
+                label
+                    .attr('x', d => d.x)
+                    .attr('y', d => d.y);
+            });
+            
+            // Drag functions
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+            
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+            
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+            
+            // Add legend
+            const legend = svg.append('g')
+                .attr('class', 'legend')
+                .attr('transform', 'translate(20, 20)');
+            
+            const legendData = [
+                { type: 'document', color: '#10b981', label: 'Documents' },
+                { type: 'entity', color: '#6366f1', label: 'Entities' }
+            ];
+            
+            const legendItems = legend.selectAll('.legend-item')
+                .data(legendData)
+                .enter().append('g')
+                .attr('class', 'legend-item')
+                .attr('transform', (d, i) => `translate(0, ${i * 20})`);
+            
+            legendItems.append('circle')
+                .attr('r', 6)
+                .attr('fill', d => d.color)
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 1);
+            
+            legendItems.append('text')
+                .attr('x', 15)
+                .attr('y', 0)
+                .attr('dy', '0.35em')
+                .attr('font-size', '12px')
+                .attr('fill', '#374151')
+                .text(d => d.label);
+        }
+
+        function showEmptyGraphMessage() {
+            document.getElementById('graphVisualization').innerHTML = `
+                <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                    <div class="text-center">
+                        <i class="fas fa-project-diagram fa-3x mb-3"></i>
+                        <p>No graph data available</p>
+                        <small>Upload and process documents to generate knowledge graph</small>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showGraphError(errorMessage = 'Unknown error') {
+            document.getElementById('graphVisualization').innerHTML = `
+                <div class="d-flex align-items-center justify-content-center h-100 text-danger">
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <p>Error loading graph data</p>
+                        <small>${errorMessage}</small>
+                        <br>
+                        <button class="btn btn-outline-primary btn-sm mt-2" onclick="loadGraphData()">
+                            <i class="fas fa-redo me-1"></i>Retry
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function refreshGraph() {
+            if (graphVisible) {
+                graphData = null; // Clear cached data
+                filteredGraphData = null;
+                currentDocumentFilter = "";
+                document.getElementById('documentFilter').value = "";
+                loadGraphData();
+            }
+        }
+
+        // Load graph data when page loads if there are documents
+        window.addEventListener('load', () => {
+            refreshDocumentList();
+            // Wait a bit for documents to load, then try to load graph
+            setTimeout(() => {
+                if (graphVisible) {
+                    loadGraphData();
+                }
+            }, 1000);
+        });
+
+        // ====== Keyword Management Functions ======
+        
+        async function reloadKeywords() {
+            try {
+                const response = await fetch('/config/keywords/reload', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`Keywords reloaded successfully!\n\nTotal whitelist: ${data.whitelist_count}\nTotal blacklist: ${data.blacklist_count}\n\nLoaded from files:\nWhitelist: ${data.loaded_whitelist_count}\nBlacklist: ${data.loaded_blacklist_count}`);
+                    
+                    // Refresh the stats display
+                    showKeywordStats();
+                    loadKeywordFilesInfo();
+                } else {
+                    alert('Error reloading keywords: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error reloading keywords:', error);
+                alert('Error reloading keywords: ' + error.message);
+            }
+        }
+
+        async function showKeywordStats() {
+            try {
+                const response = await fetch('/config/keywords/stats');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Update whitelist stats
+                    document.getElementById('whitelistStats').innerHTML = `
+                        <div class="small">
+                            <strong>Total:</strong> ${data.whitelist.total_count} keywords<br>
+                            <strong>Base:</strong> ${data.whitelist.base_count} keywords<br>
+                            <strong>From files:</strong> ${data.whitelist.loaded_count} keywords<br>
+                            <strong>Sample:</strong> ${data.whitelist.sample.slice(0, 5).join(', ')}...
+                        </div>
+                    `;
+                    
+                    // Update blacklist stats
+                    document.getElementById('blacklistStats').innerHTML = `
+                        <div class="small">
+                            <strong>Total:</strong> ${data.blacklist.total_count} keywords<br>
+                            <strong>Base:</strong> ${data.blacklist.base_count} keywords<br>
+                            <strong>From files:</strong> ${data.blacklist.loaded_count} keywords<br>
+                            <strong>Sample:</strong> ${data.blacklist.sample.slice(0, 5).join(', ')}...
+                        </div>
+                    `;
+                } else {
+                    alert('Error getting keyword stats: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error getting keyword stats:', error);
+                alert('Error getting keyword stats: ' + error.message);
+            }
+        }
+
+        async function loadKeywordFilesInfo() {
+            try {
+                const response = await fetch('/config/keywords/files');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let html = '';
+                    if (data.keyword_files.length > 0) {
+                        html = '<div class="row">';
+                        data.keyword_files.forEach(file => {
+                            const typeColor = file.type === 'whitelist' ? 'success' : file.type === 'blacklist' ? 'danger' : 'secondary';
+                            html += `
+                                <div class="col-md-6 mb-2">
+                                    <div class="border rounded p-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-${typeColor}">${file.type}</span>
+                                            <small class="text-muted">${file.keyword_count || 0} keywords</small>
+                                        </div>
+                                        <div class="mt-1">
+                                            <small><strong>${file.filename}</strong></small>
+                                        </div>
+                                        ${file.sample_keywords ? `
+                                            <div class="mt-1">
+                                                <small class="text-muted">Sample: ${file.sample_keywords.slice(0, 3).join(', ')}...</small>
+                                            </div>
+                                        ` : ''}
+                                        ${file.error ? `
+                                            <div class="mt-1 text-danger">
+                                                <small>Error: ${file.error}</small>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    } else {
+                        html = '<div class="text-muted small">No keyword files found</div>';
+                    }
+                    
+                    document.getElementById('keywordFilesInfo').innerHTML = html;
+                } else {
+                    document.getElementById('keywordFilesInfo').innerHTML = `<div class="text-danger small">Error: ${data.error || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading keyword files info:', error);
+                document.getElementById('keywordFilesInfo').innerHTML = `<div class="text-danger small">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testEntityExtraction() {
+            const text = document.getElementById('testText').value.trim();
+            if (!text) {
+                alert('Please enter some text to test');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/config/keywords/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let html = `
+                        <div class="card mt-2">
+                            <div class="card-body">
+                                <h6 class="card-title">Extraction Results</h6>
+                                <p><strong>Detected Language:</strong> ${data.detected_language}</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h6 class="text-primary">Enhanced Entities (${data.entity_counts.enhanced})</h6>
+                                        <div class="entity-list">
+                    `;
+                    
+                    if (data.extraction_results.enhanced_entities.length > 0) {
+                        data.extraction_results.enhanced_entities.forEach(entity => {
+                            html += `<span class="badge bg-primary me-1 mb-1">${entity.text} (${entity.label})</span>`;
+                        });
+                    } else {
+                        html += '<em class="text-muted">No entities found</em>';
+                    }
+                    
+                    html += `
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6 class="text-success">Chinese Entities (${data.entity_counts.chinese})</h6>
+                                        <div class="entity-list">
+                    `;
+                    
+                    if (data.extraction_results.chinese_entities.length > 0) {
+                        data.extraction_results.chinese_entities.forEach(entity => {
+                            html += `<span class="badge bg-success me-1 mb-1">${entity.text} (${entity.label})</span>`;
+                        });
+                    } else {
+                        html += '<em class="text-muted">No Chinese entities found</em>';
+                    }
+                    
+                    html += `
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6 class="text-info">Basic Entities (${data.entity_counts.basic})</h6>
+                                        <div class="entity-list">
+                    `;
+                    
+                    if (data.extraction_results.basic_entities.length > 0) {
+                        data.extraction_results.basic_entities.forEach(entity => {
+                            html += `<span class="badge bg-info me-1 mb-1">${entity.text} (${entity.label})</span>`;
+                        });
+                    } else {
+                        html += '<em class="text-muted">No basic entities found</em>';
+                    }
+                    
+                    html += `
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <h6>Settings Used</h6>
+                                    <small class="text-muted">
+                                        Jieba: ${data.settings_used.use_jieba_segmentation}, 
+                                        Mode: ${data.settings_used.jieba_mode}, 
+                                        spaCy: ${data.settings_used.spacy_model}, 
+                                        Language: ${data.settings_used.primary_language}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('testResults').innerHTML = html;
+                } else {
+                    alert('Error testing entity extraction: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error testing entity extraction:', error);
+                alert('Error testing entity extraction: ' + error.message);
+            }
+        }
+
+        // Load keyword information when page loads
+        window.addEventListener('load', () => {
+            // Load keyword files info after a short delay
+            setTimeout(() => {
+                loadKeywordFilesInfo();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

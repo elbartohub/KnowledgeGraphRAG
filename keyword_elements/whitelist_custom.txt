@@ -1,0 +1,79 @@
+# Custom Domain-Specific Keywords
+# Add your own domain-specific keywords here
+# One keyword per line, # for comments
+
+# Example: Finance domain
+# portfolio
+# investment
+# trading
+# blockchain
+# cryptocurrency
+
+# Example: Medical domain
+# diagnosis
+# treatment
+# therapy
+# medication
+# patient
+
+# Example: Legal domain
+# contract
+# agreement
+# compliance
+# regulation
+# litigation
+
+# Add your custom keywords below:
+白開水
+多普勒
+超聲
+心動圖
+
+# Traditional Chinese technical terms
+人工智慧
+機器學習
+深度學習
+神經網路
+自然語言處理
+計算機視覺
+資料科學
+演算法
+區塊鏈
+雲端運算
+
+# Traditional Chinese companies/organizations
+台積電
+鴻海
+聯發科
+華碩
+宏碁
+廣達
+仁寶
+和碩
+
+# Major AI/Tech companies (English)
+DeepMind
+OpenAI
+Google
+Microsoft
+Meta
+Facebook
+Tesla
+NVIDIA
+AMD
+Intel
+IBM
+Amazon
+Apple
+Anthropic
+Hugging Face
+Stability AI
+Midjourney
+
+# Medical terms (HBOT therapy)
+HBOT
+HBOT治療
+HBOT 治療
+高壓氧
+高壓氧治療
+hyperbaric oxygen therapy
