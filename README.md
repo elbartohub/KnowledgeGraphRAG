@@ -1,7 +1,7 @@
 
 # Knowledge Graph RAG - Web-based Document Q&A System
 
-A modern, responsive web-based Knowledge Graph RAG application that uses Google's Gemini AI to answer questions about your uploaded documents, visualize knowledge graphs, and manage keywords.
+A modern, responsive web-based Knowledge Graph RAG application that answer questions about your uploaded documents, visualize knowledge graphs, and manage keywords.
 
 ![alt text](images/KGRAG01.png)
 ## Features
