@@ -38,6 +38,9 @@ chroma_db/*
 # Local model storage
 models/
 
+# Specstory
+.specstory/
+
 # Uploads
 uploads/
 temp_uploads/
