@@ -18,6 +18,7 @@ A modern, responsive web-based Knowledge Graph RAG application that uses Google'
 - 🖥️ **Section Layout**: All main sections (Answer, Sources, Knowledge Graph, Features, Keyword Management) have matching widths and improved visual consistency
 - 🖱️ **Keyboard Shortcuts**: Press Enter to submit questions, Ctrl+Enter for new lines
 
+![alt text](images/KGRAG01.png)
 
 ## Prerequisites
 
