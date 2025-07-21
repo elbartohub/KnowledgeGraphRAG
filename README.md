@@ -3,6 +3,7 @@
 
 A modern, responsive web-based Knowledge Graph RAG application that uses Google's Gemini AI to answer questions about your uploaded documents, visualize knowledge graphs, and manage keywords.
 
+![alt text](images/KGRAG00.png)
 ## Features
 
 - 🚀 **Modern Responsive Web Interface**: Clean, adaptive UI with drag-and-drop file upload
