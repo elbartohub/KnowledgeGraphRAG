@@ -105,13 +105,6 @@ A modern, responsive web-based Knowledge Graph RAG application that answer quest
 7. **Knowledge Graph**: Entities and relationships are visualized interactively
 8. **Keyword Management**: Whitelist/blacklist keywords are loaded from files and can be reloaded or viewed
 
-1. **Document Processing**: Files are uploaded and text is extracted
-2. **Chunking**: Large documents are split into smaller, manageable chunks
-3. **Embedding**: Text chunks are converted to vector embeddings using SentenceTransformers
-4. **Storage**: Embeddings are stored in ChromaDB for fast retrieval
-5. **Query Processing**: User questions are converted to embeddings and matched against stored chunks
-6. **Answer Generation**: Relevant chunks are sent to Gemini AI for intelligent answer generation
-
 ## API Endpoints
 
 See `app.py` for full details. Main endpoints:
