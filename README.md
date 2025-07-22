@@ -124,13 +124,6 @@ See `app.py` for full details. Main endpoints:
 - **Embeddings**: SentenceTransformers (locally stored in ./models/)
 - **Document Processing**: PyPDF2, python-docx, chardet
 
-- **Backend**: Flask (Python web framework)
-- **AI Model**: Google Gemini Pro
-- **Vector Database**: ChromaDB
-- **Embeddings**: SentenceTransformers (locally stored in ./models/)
-- **Document Processing**: PyPDF2, python-docx
-- **Frontend**: Bootstrap 5, Font Awesome
-
 ## Configuration
 
 See `.env` for environment variables. Keyword files are in `keyword_elements/`.
