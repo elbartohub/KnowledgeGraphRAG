@@ -22,7 +22,7 @@ A modern, responsive web-based Knowledge Graph RAG application that answer quest
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.8 or higher (3.13 not work for Mac)
 - Google API key for Gemini (get it from [Google AI Studio](https://makersuite.google.com/app/apikey))
 - (Optional) Docker for containerized deployment
 
