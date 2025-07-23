@@ -58,7 +58,7 @@ A modern, responsive web-based Knowledge Graph RAG application that answer quest
 
 5. **Open your browser and navigate to:**
    ```
-   http://localhost:5000
+   http://localhost:5001
    ```
 
 ## Usage
@@ -154,7 +154,7 @@ python app.py
 
 ### Production with Gunicorn
 ```bash
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
+gunicorn -w 4 -b 0.0.0.0:5001 app:app
 ```
 
 ### Docker (Optional)
@@ -166,7 +166,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
 EXPOSE 5000
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5001", "app:app"]
 ```
 
 ## Troubleshooting
