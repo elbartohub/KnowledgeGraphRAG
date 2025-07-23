@@ -52,7 +52,7 @@ CACHE_DIR = "./models/cache"  # Cache directory for model downloads
 # Flask settings
 DEBUG = True  # Set to False in production
 HOST = '0.0.0.0'
-PORT = 5000
+PORT = 5001
 
 # Logging settings
 LOG_LEVEL = 'INFO'
