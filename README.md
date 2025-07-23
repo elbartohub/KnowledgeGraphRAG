@@ -31,7 +31,7 @@ A modern, responsive web-based Knowledge Graph RAG application that answer quest
 
 1. **Clone or download this repository**
    ```bash
-   git clone https://github.com/yourusername/KnowledgeGraphRAG.git
+   git clone https://github.com/elbartohub/KnowledgeGraphRAG.git
    cd KnowledgeGraphRAG
    ```
 
